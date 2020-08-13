@@ -44,7 +44,7 @@ class BaseLine(BaseModel):
         cost = nn.CrossEntropyLoss()(x, cls_ids.cuda())
         with torch.no_grad():
             preds = {
-                "cls_ids": cls_ids.cpu().numpy(),
+                "cls_ids": cls_ids.numpy(),
                 "cls_ids_pred": torch.argmax(x, dim=1).cpu().numpy()
             }
         return cost, preds

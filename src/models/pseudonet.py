@@ -1,5 +1,10 @@
+import numpy as np
+
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+
+from torchvision import transforms
 
 from src.models import BaseModel
 from src.backbones import EfficientNet
@@ -11,6 +16,7 @@ class PseudoNet(BaseModel):
 
     def __init__(self, args):
         super().__init__()
+        self.args = args
         self.dataset = BaseDataset
         self.train_transform = transforms.Compose([
             transforms.Resize((256, 256)),
@@ -34,23 +40,20 @@ class PseudoNet(BaseModel):
     def forward(self, x):
         x = self.feature(x)
         x = self.fc(x)
-        return torch.sigmoid(x)
-
+        return x
+    
     def get_cost(self, data):
         paths, imgs, cls_ids = data
         x = self(imgs.cuda())
-
-        cost = self_defined_multi_BCE_loss()(x, cls_ids.cuda())
-
+        cost = nn.CrossEntropyLoss()(x, cls_ids.cuda())
+        pred_scores, cls_ids_pred = torch.max(torch.softmax(x, dim=1), dim=1)
         with torch.no_grad():
-            cls_ids_pred = torch.argmax(x, dim=1).cpu().numpy()
             preds = {
-                "paths": paths,
-                "cls_ids": cls_ids,
-                "cls_ids_pred": cls_ids_pred,
-                "pred_scores": torch.max(x, dim=1).cpu().numpy()
+                "paths": np.array(paths),
+                "cls_ids": cls_ids.numpy(),
+                "cls_ids_pred": cls_ids_pred.cpu().numpy(),
+                "pred_scores": pred_scores.cpu().numpy()
             }
-        
         return cost, preds
 
     def get_pseudo_train_dataloader(self):

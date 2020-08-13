@@ -15,7 +15,7 @@ arg_parser.add_argument("--model_weight", type=str)
 
 args = arg_parser.parse_args()
 
-model = BaseLine(args)
+model = PseudoNet(args)
 if args.model_weight is not None:
     model.load_state_dict(torch.load(args.model_weight))
 

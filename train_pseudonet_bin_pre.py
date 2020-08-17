@@ -2,7 +2,7 @@ import argparse
 
 import torch
 
-from src.models import PseudoNet
+from src.models import PseudoNetBin
 from src.trainer import Trainer
 
 
@@ -15,7 +15,7 @@ arg_parser.add_argument("--model_weight", type=str)
 
 args = arg_parser.parse_args()
 
-model = PseudoNet(args)
+model = PseudoNetBin(args)
 if args.model_weight is not None:
     model.load_state_dict(torch.load(args.model_weight))
 

@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from .utils import draw_cost_curve
 
@@ -38,6 +37,7 @@ class Trainer:
 
         train_cost_dict = dict()
         test_cost_dict = dict()
+        accuracy_dict = dict()
 
         for epoch in range(self.args.epochs):
             self.write_log(f"Epoch {epoch + 1:03d}/{self.args.epochs:03d} | LR: {self.optimizer.param_groups[0]['lr']:.6f}")
@@ -47,13 +47,14 @@ class Trainer:
             if (epoch + 1) % 10 == 0:
                 test_cost, accuracy = self.evaluate(val_dataloader)
                 test_cost_dict[epoch + 1] = test_cost
+                accuracy_dict[epoch + 1] = accuracy
                 if accuracy > self.best_accuracy:
                     self.best_accuracy = accuracy
                     torch.save(self.model.state_dict(), f"results/weights/{self.model_name}.pt")
                     self.write_log("Saved best model!")
             self.write_log("")
 
-            draw_cost_curve(train_cost_dict, test_cost_dict, self.model_name)
+            draw_cost_curve(train_cost_dict, test_cost_dict, accuracy_dict, self.model_name)
 
     def train_unsup(self):
         self.best_accuracy = 0
@@ -73,30 +74,29 @@ class Trainer:
 
         train_cost_dict = dict()
         test_cost_dict = dict()
+        accuracy_dict = dict()
 
         for epoch in range(self.args.epochs):
             self.write_log(f"Epoch {epoch + 1:03d}/{self.args.epochs:03d} | LR: {self.optimizer.param_groups[0]['lr']:.6f}")
-            self.write_log("Train 3 epochs on training set...")
-            for i in range(3):
-                self.write_log(f"Epoch {i + 1}")
-                self.train_epoch(train_dataloader)
 
-            self.write_log("Train 3 epochs on pseudo-training set...")
+            self.write_log("Train on training set...")
+            self.train_epoch(train_dataloader)
+
+            self.write_log("Train on pseudo-training set...")
             pseudo_train_dataloader = self.model.get_pseudo_train_dataloader()
-            for i in range(3):
-                self.write_log(f"Epoch {i + 1}")
-                train_cost = self.train_epoch(pseudo_train_dataloader)
+            train_cost = self.train_epoch(pseudo_train_dataloader)
             train_cost_dict[epoch + 1] = train_cost
 
             test_cost, accuracy = self.evaluate(val_dataloader)
             test_cost_dict[epoch + 1] = test_cost
+            accuracy_dict[epoch + 1] = accuracy
             if accuracy > self.best_accuracy:
                 self.best_accuracy = accuracy
                 torch.save(self.model.state_dict(), f"results/weights/{self.model_name}.pt")
                 self.write_log("Saved best model!")
             self.write_log("")
 
-            draw_cost_curve(train_cost_dict, test_cost_dict, self.model_name)
+            draw_cost_curve(train_cost_dict, test_cost_dict, accuracy_dict, self.model_name)
 
     def train_epoch(self, dataloader):
         batch_cost_list = list()

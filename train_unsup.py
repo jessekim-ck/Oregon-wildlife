@@ -9,7 +9,7 @@ from src.trainer import Trainer
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--epochs", type=int, default=200)
 arg_parser.add_argument("--batch_size", type=int, default=64)
-arg_parser.add_argument("--num_workers", type=int, default=3)
+arg_parser.add_argument("--num_workers", type=int, default=6)
 arg_parser.add_argument("--lr", type=float, default=0.001)
 arg_parser.add_argument("--model_weight", type=str)
 

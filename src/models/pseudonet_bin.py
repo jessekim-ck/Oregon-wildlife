@@ -6,13 +6,14 @@ from torch.utils.data import DataLoader
 
 from torchvision import transforms
 
+from .utils import multi_BCE_loss
 from src.models import BaseModel
 from src.backbones import EfficientNet
 from src.datasets import BaseDataset
 from src.datasets import PseudoDataset
 
 
-class PseudoNet(BaseModel):
+class PseudoNetBin(BaseModel):
 
     def __init__(self, args):
         super().__init__()
@@ -45,9 +46,9 @@ class PseudoNet(BaseModel):
     def get_cost(self, data):
         paths, imgs, cls_ids = data
         x = self(imgs.cuda())
-        cost = nn.CrossEntropyLoss()(x, cls_ids.cuda())
+        cost = multi_BCE_loss(x, cls_ids.cuda())
         with torch.no_grad():
-            pred_scores, cls_ids_pred = torch.max(torch.softmax(x, dim=1), dim=1)
+            pred_scores, cls_ids_pred = torch.max(torch.sigmoid(x), dim=1)
             preds = {
                 "paths": np.array(paths),
                 "cls_ids": cls_ids.numpy(),
@@ -60,7 +61,8 @@ class PseudoNet(BaseModel):
         dataset = PseudoDataset(
             model=self,
             dataloader=self.get_test_dataloader(),
-            transform=self.train_transform
+            transform=self.train_transform,
+            th=0.7
         )
 
         dataloader = DataLoader(

@@ -28,7 +28,8 @@ class BaseModel(nn.Module):
             dataset=dataset,
             batch_size=self.args.batch_size,
             shuffle=True,
-            num_workers=self.args.num_workers
+            num_workers=self.args.num_workers,
+            pin_memory=True
         )
 
         return dataloader
@@ -43,7 +44,8 @@ class BaseModel(nn.Module):
             dataset=dataset,
             batch_size=self.args.batch_size * 2,
             shuffle=False,
-            num_workers=self.args.num_workers
+            num_workers=self.args.num_workers,
+            pin_memory=True
         )
         
         return dataloader

@@ -6,14 +6,14 @@ from torch.utils.data import DataLoader
 
 from torchvision import transforms
 
-from .utils import multi_BCE_loss
+from .utils import multi_focal_loss
 from src.models import BaseModel
 from src.backbones import EfficientNet
 from src.datasets import BaseDataset
 from src.datasets import PseudoDataset
 
 
-class PseudoNetBin(BaseModel):
+class PseudoNetFocal(BaseModel):
 
     def __init__(self, args):
         super().__init__()
@@ -46,7 +46,7 @@ class PseudoNetBin(BaseModel):
     def get_cost(self, data):
         paths, imgs, cls_ids = data
         x = self(imgs.cuda())
-        cost = multi_BCE_loss(x, cls_ids.cuda())
+        cost = multi_focal_loss(x, cls_ids.cuda())
         with torch.no_grad():
             pred_scores, cls_ids_pred = torch.max(torch.sigmoid(x), dim=1)
             preds = {
@@ -62,7 +62,7 @@ class PseudoNetBin(BaseModel):
             model=self,
             dataloader=self.get_test_dataloader(),
             transform=self.train_transform,
-            th=0.8
+            th=0.9
         )
 
         dataloader = DataLoader(
